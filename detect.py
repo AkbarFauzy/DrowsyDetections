@@ -59,12 +59,16 @@ ALARM = False
 ISEYECLOSED = False
 DROWSY_TIME = 0.0
 
-def start_alarm():
+def start_alarm(alarm_type):
     global ALARM
 
     if ALARM:
-        print("ALARM")
-        p = vlc.MediaPlayer(f"file:///drowsy_alert.wav")
+        if alarm_type == "drowsy":
+            print("Drowsy Alarm")
+            p = vlc.MediaPlayer(f"file:///drowsy_alert.wav")
+        elif alarm_type == "distracted":
+            print("Distracted Alarm")
+            p = vlc.MediaPlayer(f"file:///distacted_alert.wav")
         p.play()
         Ended = 6
         current_state = p.get_state()
@@ -103,12 +107,11 @@ def run(
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
         vid_stride=1,  # video frame-rate stride
+        wait_time=3.0
 ):
     global ALARM
     global ISEYECLOSED
     global DROWSY_TIME
-
-    WAIT_TIME = 5.0
 
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -215,9 +218,9 @@ def run(
                         DROWSY_TIME += end_time - start_time
                         start_time = end_time
                         LOGGER.info('EYE TIMER:{}'.format(DROWSY_TIME))
-                        if DROWSY_TIME > WAIT_TIME:
+                        if DROWSY_TIME > wait_time and not ALARM:
                             ALARM = True
-                            threading.Thread(target=start_alarm).start()
+                            threading.Thread(target=start_alarm, args=("drowsy",)).start()
                     elif label == "opened_eye":
                         start_time = time.perf_counter()
                         DROWSY_TIME = 0.0
@@ -239,8 +242,13 @@ def run(
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
             else:
                 #ALARM for not detecting face
-                ALARM = True
-                threading.Thread(target=start_alarm).start()
+                end_time = time.perf_counter()
+                DROWSY_TIME += end_time - start_time
+                start_time = end_time
+                LOGGER.info('DISTRACTED TIMER{}'.format(DROWSY_TIME))
+                if DROWSY_TIME > wait_time and not ALARM:
+                    ALARM = True
+                    threading.Thread(target=start_alarm, args=("distracted",)).start()
 
             # Stream results
             im0 = annotator.result()
@@ -315,6 +323,7 @@ def parse_opt():
     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
     parser.add_argument('--vid-stride', type=int, default=1, help='video frame-rate stride')
+    parser.add_argument('--wait-time', type=float, default=3.0, help='wait time to give alert')
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     print_args(vars(opt))

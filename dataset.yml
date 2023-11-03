@@ -1,29 +1,13 @@
-# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
-path: ../dataset  # dataset root dir
-train: images/train  # train images (relative to 'path') 128 images
-val: images/val  # val images (relative to 'path') 128 images
-test:  # test images (optional)
+train: ../dataset/roboflow/train/images
+val: ../dataset/roboflow/valid/images
+test: #../dataset/roboflow/test/images
 
-# Classes (80 COCO classes)
-nc: 19
-names: [
-  'dog',
-  'person',
-  'cat',
-  'tv',
-  'car',
-  'meatballs',
-  'marinara sauce',
-  'tomato soup',
-  'chicken noodle soup',
-  'french onion soup',
-  'chicken breast',
-  'ribs',
-  'pulled pork',
-  'hamburger',
-  'cavity',
-  'face',
-  'opened_eye',
-  'yawn',
-  'closed_eye'
-]
+nc: 4
+names: ['closed_eye', 'face', 'opened_eye', 'yawn']
+
+roboflow:
+  workspace: akbar-fauzy-wjw57
+  project: drowsydetection-tbsal
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/akbar-fauzy-wjw57/drowsydetection-tbsal/dataset/1
